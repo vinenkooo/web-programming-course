@@ -24,7 +24,7 @@ function isStringArray(value: unknown): value is string[] {
 
 export class SessionService {
   async submitAnswer(sessionId: string, questionId: string, userAnswer: string | string[]) {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: any) => {
       const session = await tx.session.findUnique({
         where: { id: sessionId },
       });
@@ -78,16 +78,13 @@ export class SessionService {
           data: {
             sessionId,
             questionId,
-            userAnswer: userAnswer as Prisma.InputJsonValue,
+            userAnswer: userAnswer as any,
             score,
             isCorrect,
           },
         });
       } catch (error) {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2002"
-        ) {
+        if ((error as any)?.code === "P2002") {
           throw new SessionServiceError("Answer already submitted", 409);
         }
 
@@ -97,7 +94,7 @@ export class SessionService {
   }
 
   async submitSession(sessionId: string) {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: any) => {
       const session = await tx.session.findUnique({
         where: { id: sessionId },
         include: {
@@ -122,8 +119,8 @@ export class SessionService {
       }
 
       const totalScore = session.answers
-        .filter((answer) => answer.score !== null)
-        .reduce((sum, answer) => sum + (answer.score ?? 0), 0);
+        .filter((answer: { score: number | null }) => answer.score !== null)
+        .reduce((sum: number, answer: { score: number | null }) => sum + (answer.score ?? 0), 0);
 
       return tx.session.update({
         where: { id: sessionId },

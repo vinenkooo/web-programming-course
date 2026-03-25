@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "lint": "tsc --noEmit",
     "build": "tsc",
     "start": "node dist/index.js",
     "test:unit": "vitest run --exclude \"**/*.feature.test.ts\"",

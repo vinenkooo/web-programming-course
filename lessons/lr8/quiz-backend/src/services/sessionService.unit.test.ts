@@ -33,7 +33,7 @@ vi.mock("./scoringService.js", () => ({
   },
 }));
 
-import { SessionService, SessionServiceError } from "./sessionService.js";
+import { SessionService } from "./sessionService.js";
 
 describe("SessionService (unit)", () => {
   const service = new SessionService();
@@ -53,7 +53,7 @@ describe("SessionService (unit)", () => {
 
     await expect(
       service.submitAnswer("session-id", "question-id", ["A"]),
-    ).rejects.toMatchObject<Partial<SessionServiceError>>({
+    ).rejects.toMatchObject({
       message: "Session not found",
       statusCode: 404,
     });

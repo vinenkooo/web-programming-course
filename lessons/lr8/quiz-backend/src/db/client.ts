@@ -6,7 +6,7 @@ export const prisma = new PrismaClient({
   log: [{ emit: "event", level: "query" }, "warn", "error"],
 });
 
-prisma.$on("query", (event) => {
+prisma.$on("query", (event: any) => {
   if (event.duration >= slowQueryMs) {
     console.warn(`[prisma][slow-query] ${event.duration}ms`);
   }

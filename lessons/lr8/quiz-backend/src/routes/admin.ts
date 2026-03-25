@@ -67,7 +67,7 @@ admin.post("/questions", async (c) => {
       return c.json({ error: error.flatten() }, 400);
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+    if ((error as any)?.code === "P2003") {
       return c.json({ error: "Category not found" }, 400);
     }
 
@@ -96,7 +96,7 @@ admin.post("/questions/batch", async (c) => {
       return c.json({ error: error.flatten() }, 400);
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+    if ((error as any)?.code === "P2003") {
       return c.json({ error: "Category not found" }, 400);
     }
 
@@ -121,11 +121,11 @@ admin.put("/questions/:id", async (c) => {
       return c.json({ error: error.flatten() }, 400);
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    if ((error as any)?.code === "P2025") {
       return c.json({ error: "Question not found" }, 404);
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+    if ((error as any)?.code === "P2003") {
       return c.json({ error: "Category not found" }, 400);
     }
 
@@ -197,7 +197,7 @@ admin.post("/answers/:id/grade", async (c) => {
     const body = await c.req.json();
     const grade = GradeSchema.parse(body);
 
-    const answer = await prisma.$transaction(async (tx) => {
+    const answer = await prisma.$transaction(async (tx: any) => {
       const existing = await tx.answer.findUnique({
         where: { id },
         include: {
@@ -231,9 +231,9 @@ admin.post("/answers/:id/grade", async (c) => {
         },
       });
 
-      const allGraded = session?.answers.every((a) => a.score !== null) ?? false;
+      const allGraded = session?.answers.every((a: any) => a.score !== null) ?? false;
       if (session && allGraded) {
-        const totalScore = session.answers.reduce((sum, a) => sum + (a.score ?? 0), 0);
+        const totalScore = session.answers.reduce((sum: any, a: any) => sum + (a.score ?? 0), 0);
 
         await tx.session.update({
           where: { id: session.id },
@@ -301,7 +301,7 @@ admin.get("/students/:userId/stats", async (c) => {
 
     const averageScore =
       sessions.length > 0
-        ? sessions.reduce((sum, s) => sum + (s.score ?? 0), 0) / sessions.length
+        ? sessions.reduce((sum: any, s: any) => sum + (s.score ?? 0), 0) / sessions.length
         : 0;
 
     return c.json({
@@ -351,13 +351,15 @@ admin.get("/students", async (c) => {
     ]);
 
     return c.json({
-      students: students.map((s) => {
+      students: students.map((s: any) => {
         const scores = s.sessions
-          .map((session) => session.score)
-          .filter((value): value is number => value !== null);
+          .map((session: any) => session.score)
+          .filter((value: any) => value !== null);
 
         const averageScore =
-          scores.length > 0 ? scores.reduce((sum, value) => sum + value, 0) / scores.length : 0;
+          scores.length > 0
+            ? scores.reduce((sum: any, value: any) => sum + value, 0) / scores.length
+            : 0;
 
         return {
           id: s.id,
