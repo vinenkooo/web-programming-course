@@ -2,38 +2,37 @@
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
-const CACHE_NAME = 'todo-pwa-starter-v1';
+const CACHE_NAME = 'app-shell-v1';
+const APP_SHELL = ['/', '/index.html', '/offline.html'];
 
 sw.addEventListener('install', (event: ExtendableEvent) => {
-  event.waitUntil(
-    (async () => {
-      // TODO(PWA-SW-1): предкэшируйте shell-ресурсы приложения.
-      // Пример: '/', '/index.html'.
-      await sw.skipWaiting();
-    })()
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
 });
 
 sw.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(
-    (async () => {
-      // TODO(PWA-SW-2): очистите старые кэши и оставьте только актуальную версию.
-      // Пример шагов:
-      // 1) получить список ключей через caches.keys()
-      // 2) удалить все, кроме CACHE_NAME
-      await sw.clients.claim();
-    })()
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
   );
 });
 
 sw.addEventListener('fetch', (event: FetchEvent) => {
   if (event.request.method !== 'GET') return;
 
-  // TODO(PWA-SW-3): реализуйте стратегию для GET-запросов.
-  // Рекомендуемый минимум для лабы:
-  // 1) network-first для HTML
-  // 2) fallback на offline.html
-  // 3) cache-first или stale-while-revalidate для статических ресурсов
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) {
+          return cached;
+        }
 
-  event.respondWith(fetch(event.request));
+        const offlinePage = await caches.match('/offline.html');
+        return offlinePage ?? Response.error();
+      })
+  );
 });
